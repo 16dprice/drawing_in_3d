@@ -1,3 +1,4 @@
+#![allow(unused)]
 mod movement;
 mod torus;
 mod examples;
@@ -7,6 +8,8 @@ use std::{f32::consts::PI, fmt::DebugList, vec};
 use macroquad::prelude::*;
 use movement::handle_input;
 use torus::Torus;
+
+const BACKGROUND_COLOR: Color = color_u8!(0x18, 0x18, 0x18, 0xFF);
 
 fn rotate_point_around_x_axis(point: &mut Vec3, rotation_angle: f32) {
     let old_y = point.y;
@@ -32,6 +35,7 @@ fn rotate_point_around_y_axis(point: &mut Vec3, rotation_angle: f32) {
 
 fn main_conf() -> Conf {
     Conf {
+        fullscreen: true,
         high_dpi: true,
         ..Default::default()
     }
@@ -54,27 +58,27 @@ async fn main() {
     let mut torus_rotation_angle = 0.0;
 
     loop {
-        clear_background(BLACK);
+
+        clear_background(BACKGROUND_COLOR);
 
         handle_input(&mut camera, &mut pitch, &mut yaw, movement_speed, rotation_speed);
 
         set_camera(&camera);
-        // draw_grid(20, 1.0, BLACK, GRAY);
 
         let mut vertices = Vec::<Vertex>::new();
 
         let torus = Torus { r: 0.5, R: 2.0 };
         let mut phi = 0.0;
 
-        let major_axis_resolution: usize = 190;
-        let minor_axis_resolution: usize = 50;
+        let major_axis_resolution: usize = 100;
+        let minor_axis_resolution: usize = 20;
         let delta_phi = 2.0 * PI / major_axis_resolution as f32;
 
         for i in 0..major_axis_resolution {
             for j in 0..minor_axis_resolution {
                 let theta = (j as f32) * 2.0 * PI / minor_axis_resolution as f32;
 
-                let b = if i < major_axis_resolution / 2 {
+                let r = if i < major_axis_resolution / 2 {
                     ((510.0 / major_axis_resolution as f32) * (i as f32)) as u8
                 } else {
                     ((-510.0 / major_axis_resolution as f32) * (i as f32) + 510.0) as u8
@@ -83,7 +87,7 @@ async fn main() {
                 vertices.push(Vertex {
                     position: torus.get_point(theta, phi),
                     uv: vec2(0.5, 1.0),
-                    color: [127, 0, b, 255],
+                    color: [r, 0, 255, 255],
                     normal: vec4(0.0, 0.0, 0.0, 0.0),
                 });
             }
@@ -91,14 +95,14 @@ async fn main() {
             phi += delta_phi;
         }
 
-        // torus_rotation_angle += 2.0 * PI * (get_frame_time() / 10.0);
-        // while torus_rotation_angle > 2.0 * PI {
-        //     torus_rotation_angle -= 2.0 * PI;
-        // }
-        // for v in &mut vertices {
-            // rotate_point_around_x_axis(&mut v.position, torus_rotation_angle);
+        torus_rotation_angle += 2.0 * PI * (get_frame_time() / 10.0);
+        while torus_rotation_angle > 2.0 * PI {
+            torus_rotation_angle -= 2.0 * PI;
+        }
+        for v in &mut vertices {
+            rotate_point_around_x_axis(&mut v.position, torus_rotation_angle);
             // rotate_point_around_y_axis(&mut v.position, torus_rotation_angle);
-        // }
+        }
 
         let mut indices = Vec::<u16>::new();
         for i in 0..major_axis_resolution as u16 {
@@ -140,24 +144,8 @@ async fn main() {
             });
         }
 
-        // draw_line_3d(
-        //     vec3(0.0, 0.0, 0.0),
-        //     vec3(0.0, 1.0, 0.0),
-        //     YELLOW
-        // );
-
-        // for v in vertices {
-        //     draw_sphere_ex(
-        //         v.position,
-        //         0.1,
-        //         None,
-        //         BLACK,
-        //         DrawSphereParams { rings: 3, slices: 3, draw_mode: DrawMode::Triangles }
-        //     );
-        // }
-
-        set_default_camera();
-        draw_fps();
+        // set_default_camera();
+        // draw_fps();
 
         next_frame().await;
     }

@@ -32,11 +32,7 @@ pub fn handle_input(
         pitch_rad.sin(),
         yaw_rad.sin() * pitch_rad.cos(),
     ).normalize();
-    
-    // Update camera target based on position and forward direction
-    camera.target = camera.position + forward;
 
-    // Handle movement (WASD)
     let right = vec3(forward.z, 0.0, -forward.x).normalize();
     
     if is_key_down(KeyCode::W) {
@@ -55,4 +51,6 @@ pub fn handle_input(
     if is_key_down(KeyCode::D) {
         camera.position -= right * movement_speed;
     }
+
+    camera.target = camera.position + forward;
 }
